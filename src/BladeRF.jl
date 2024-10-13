@@ -5,17 +5,57 @@ using CEnum
 using Printf
 using Libdl
 
-# Include the generated deps.jl file
-include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+# Function to find the library in standard locations
+function find_libbladeRF()
+    possible_paths = [
+        "/usr/local/lib/libbladeRF.so",
+        "/usr/lib/libbladeRF.so",
+        "/usr/local/lib64/libbladeRF.so",
+        "/usr/lib64/libbladeRF.so",
+        "/opt/local/lib/libbladeRF.so",
+        "/opt/lib/libbladeRF.so"
+    ]
+    for path in possible_paths
+        if isfile(path)
+            return path
+        end
+    end
+    return nothing
+end
+
+# Function to install the BladeRF library
+function install_bladeRF()
+    println("Installing the BladeRF C library...")
+    # Path to the bash script
+    bash_script = joinpath(@__DIR__, "..", "deps", "install_bladerf.sh")
+
+    if !isfile(bash_script)
+        error("Installation script not found at expected location: $bash_script")
+    end
+
+    # Run the bash script to install the library
+    run(`bash $bash_script`)
+
+    # Verify installation
+    lib_path = find_libbladeRF()
+    if lib_path === nothing
+        error("The BladeRF C library was not installed correctly. Consider installing manually.")
+    else
+        println("BladeRF C library installed successfully at: $lib_path")
+        # Add the library path to DL_LOAD_PATH
+        push!(Libdl.DL_LOAD_PATH, dirname(lib_path))
+    end
+end
 
 # Initialization function
 function __init__()
     println("Loading BladeRF library...")
-    if isfile(libbladeRF)
+    global libbladeRF = find_libbladeRF()
+    if libbladeRF !== nothing
         Libdl.dlopen(libbladeRF)
         println("BladeRF library loaded successfully.")
     else
-        println("BladeRF C library not found.")
+        @warn "BladeRF C library not found. Run `BladeRF.install_bladeRF()` to install it."
     end
 end
 
@@ -265,11 +305,6 @@ end
 #******************************************************************************
 # Sample Rate
 #******************************************************************************
-
-# Enable/disable module
-function enable_module(dev::BladeRFDevice, channel::Integer, enable::Bool)
-    check_error(ccall((:bladerf_enable_module, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Bool), dev.dev, Int32(channel), enable))
-end
 
 # Get and set sample rate
 function set_sample_rate(dev::BladeRFDevice, channel::Integer, rate::Integer)
