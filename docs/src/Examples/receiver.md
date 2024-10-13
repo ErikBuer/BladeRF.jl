@@ -3,9 +3,11 @@
 This example configures the BladeRF as a receiver and captures samples on channel 0.
 There is a lot of setup, as this is a low level API.
 
-```@example Receiver
-@setup only=LOCAL # Only run with connected hardware
+```@meta
+DocTestSetup = :(ENV["LOCAL"] == "true")
+```
 
+```@example Receiver
 using ..BladeRF
 using DSP
 using Plots
