@@ -6,7 +6,11 @@ using Printf
 using Libdl
 
 # Include the generated deps.jl file
-include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+if isfile(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+    include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+else
+    error("deps.jl is missing. Ensure you have run `build.jl` to generate it.")
+end
 
 # Initialization function
 function __init__()
