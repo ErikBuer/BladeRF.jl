@@ -50,9 +50,9 @@ end
 # Initialization function
 function __init__()
     println("Loading BladeRF library...")
-    lib_path = find_libbladeRF()
-    if lib_path !== nothing
-        Libdl.dlopen(lib_path)
+    global libbladeRF = find_libbladeRF()
+    if libbladeRF !== nothing
+        Libdl.dlopen(libbladeRF)
         println("BladeRF library loaded successfully.")
     else
         @warn "BladeRF C library not found. Run `BladeRF.install_bladeRF()` to install it."
