@@ -3,27 +3,20 @@
 This example configures the BladeRF as a receiver and captures samples on channel 0.
 There is a lot of setup, as this is a low level API.
 
-```@meta
-DocTestSetup = :(ENV["LOCAL"] == "true")
-```
-
-```@example Receiver
-:eval = ENV["LOCAL"] == "true"
-
+```jldoctest Receiver; output = false
 using ..BladeRF
 using DSP
 using Plots
 
 # Initialize the device
-radioBoard = BladeRF.BladeRFDevice()
+radioBoard = BladeRF.BladeRFDevice();
 
 
-desired_freq_Hz = round(Int64, 2.4e9)
-BladeRF.set_frequency(radioBoard, 0, desired_freq_Hz)
+desired_freq_Hz = round(Int64, 2.4e9);
+BladeRF.set_frequency(radioBoard, 0, desired_freq_Hz);
 
 # Get frequency to verify
-freq = BladeRF.get_frequency(radioBoard, 0)
-println("Frequency: ", freq)
+freq = BladeRF.get_frequency(radioBoard, 0);
 
 # Setting bandwidth
 desired_bandwidth = 5000000  # Desired bandwidth in Hz
@@ -41,13 +34,13 @@ BladeRF.set_gain_mode(radioBoard, 0, BladeRF.BLADERF_GAIN_MGC)
 # Set gain
 BladeRF.set_gain(radioBoard, 0, 30)
 
+# output
+
 ```
 
 Now we have configured the receiver, and it's time to setup the sampling.
 
-```@example Receiver
-:eval = ENV["LOCAL"] == "true"
-
+```jldoctest Receiver; output = false
 sample_format = BladeRF.BLADERF_FORMAT_SC16_Q11
 
 num_samples = 4096
@@ -96,19 +89,28 @@ BladeRF.close(radioBoard)
 
 
 complex_samples = reinterpret(Complex{Int16}, received_bytes)
-normalized_samples = Complex{Float32}.(complex_samples) ./ 2048.0
+normalized_samples = Complex{Float32}.(complex_samples) ./ 2048.0;
+println("length(normalized_samples) = ", length(normalized_samples))
+
+# output
+
+length(normalized_samples) = 4096
 ```
 
 We have now sucsessully sampled with the radio. To verify the samples, lets plot its Power Spectral Density (PSD).
 
-```@example Receiver
-:eval = ENV["LOCAL"] == "true"
-
+```jldoctest Receiver; output = false
 pgram = periodogram(normalized_samples, onesided=false, fs=actual_rate_Hz)
 
 plot(pgram.freq, pow2db.(pgram.power), title="Power Spectral Density", xlabel="Frequency", ylabel="Power [dB/Hz]")
 
-savefig("../../../plots/Receiver_PSD.svg"); nothing # hide
+file_name = "Receiver_PSD.svg" # hide
+savefig(file_name); nothing # hide
+
+# output
+
+GKS: cannot open display - headless operation mode active
+
 ```
 
 ![PSD of the samples](https://github.com/ErikBuer/BladeRF.jl/blob/master/plots/Receiver_PSD.svg)
