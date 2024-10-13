@@ -4,6 +4,8 @@ This example configures the BladeRF as a receiver and captures samples on channe
 There is a lot of setup, as this is a low level API.
 
 ```@example Receiver
+@setup only=LOCAL # Only run with connected hardware
+
 using ..BladeRF
 using DSP
 using Plots
