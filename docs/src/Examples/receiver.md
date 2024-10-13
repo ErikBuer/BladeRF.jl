@@ -8,6 +8,8 @@ DocTestSetup = :(ENV["LOCAL"] == "true")
 ```
 
 ```@example Receiver
+:eval = ENV["LOCAL"] == "true"
+
 using ..BladeRF
 using DSP
 using Plots
@@ -44,6 +46,8 @@ BladeRF.set_gain(radioBoard, 0, 30)
 Now we have configured the receiver, and it's time to setup the sampling.
 
 ```@example Receiver
+:eval = ENV["LOCAL"] == "true"
+
 sample_format = BladeRF.BLADERF_FORMAT_SC16_Q11
 
 num_samples = 4096
@@ -98,6 +102,7 @@ normalized_samples = Complex{Float32}.(complex_samples) ./ 2048.0
 We have now sucsessully sampled with the radio. To verify the samples, lets plot its Power Spectral Density (PSD).
 
 ```@example Receiver
+:eval = ENV["LOCAL"] == "true"
 
 pgram = periodogram(normalized_samples, onesided=false, fs=actual_rate_Hz)
 
