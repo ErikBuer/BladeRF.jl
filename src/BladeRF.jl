@@ -306,11 +306,6 @@ end
 # Sample Rate
 #******************************************************************************
 
-# Enable/disable module
-function enable_module(dev::BladeRFDevice, channel::Integer, enable::Bool)
-    check_error(ccall((:bladerf_enable_module, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Bool), dev.dev, Int32(channel), enable))
-end
-
 # Get and set sample rate
 function set_sample_rate(dev::BladeRFDevice, channel::Integer, rate::Integer)
     actual = Ref{Cuint}()

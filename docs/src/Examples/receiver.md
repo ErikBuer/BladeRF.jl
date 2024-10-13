@@ -7,6 +7,7 @@ There is a lot of setup, as this is a low level API.
 using ..BladeRF
 using DSP
 using Plots
+ENV["GKSwstype"]="100" # hide
 
 # Initialize the device
 radioBoard = BladeRF.BladeRFDevice();
@@ -104,12 +105,10 @@ pgram = periodogram(normalized_samples, onesided=false, fs=actual_rate_Hz)
 
 plot(pgram.freq, pow2db.(pgram.power), title="Power Spectral Density", xlabel="Frequency", ylabel="Power [dB/Hz]")
 
-file_name = "Receiver_PSD.svg" # hide
-savefig(file_name); nothing # hide
+file_name = "Receiver_PSD.svg"
+savefig(file_name); nothing
 
 # output
-
-GKS: cannot open display - headless operation mode active
 
 ```
 

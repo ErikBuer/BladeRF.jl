@@ -15,8 +15,9 @@ if LOCAL
     using .BladeRF
 else
     using BladeRF
-    ENV["GKSwstype"] = "100"
 end
+
+ENV["GKSwstype"]="100"
 
 # Disable doctests if `run_doc_tests` is false
 DocMeta.setdocmeta!(BladeRF, :DocTestSetup, :(using BladeRF); recursive=true)
