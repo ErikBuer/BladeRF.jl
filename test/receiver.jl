@@ -1,8 +1,6 @@
 using BladeRF
 
 using DSP
-using FFTW
-using Statistics
 using Plots
 gr();
 
@@ -59,7 +57,7 @@ end
 
 
 # Setting bandwidth
-desired_bandwidth = 5000000  # Desired bandwidth in Hz
+desired_bandwidth = 500000  # Desired bandwidth in Hz
 actual_bandwidth = BladeRF.set_bandwidth(radioBoard, 0, desired_bandwidth)
 println("Bandwidth set to: $(actual_bandwidth) Hz")
 
