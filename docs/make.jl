@@ -8,18 +8,17 @@ using Documenter
 # The code below checks wether its being called from make_local.jl or not.
 const LOCAL = get(ENV, "LOCAL", "false") == "true"
 
+global run_doc_tests = LOCAL
+
 if LOCAL
     include("../src/BladeRF.jl")
     using .BladeRF
-
-    run_doc_tests = true
 else
     using BladeRF
     ENV["GKSwstype"] = "100"
-
-    run_doc_tests = false
 end
 
+# Disable doctests if `run_doc_tests` is false
 DocMeta.setdocmeta!(BladeRF, :DocTestSetup, :(using BladeRF); recursive=true)
 
 makedocs(

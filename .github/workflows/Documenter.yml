@@ -21,6 +21,8 @@ jobs:
           version: '1.6'
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+      - name: Set CI environment variable for Documenter # Importand because the tests require connected hardware.
+        run: echo "LOCAL=false" >> $GITHUB_ENV
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
