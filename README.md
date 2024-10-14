@@ -1,5 +1,7 @@
 # BladeRF.jl
 
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://erikbuer.github.io/BladeRF.jl/stable/)
+
 Julia wrappers for [BladeRF](https://github.com/Nuand/bladeRF) library.
 
 The package is currently not a registered package.
