@@ -1,13 +1,13 @@
 # Receiver
 
 This example configures the BladeRF as a receiver and captures samples on channel 0.
-There is a lot of setup, as this is a low level API.
+There is a lot of setup, as this is a low-level API.
 
 ```jldoctest Receiver; output = false
 using ..BladeRF
 using DSP
 using Plots
-ENV["GKSwstype"]="100" # hide
+ENV["GKSwstype"]="100" # run Plots headless
 
 # Initialize the device
 radioBoard = BladeRF.BladeRFDevice();
@@ -39,7 +39,7 @@ BladeRF.set_gain(radioBoard, 0, 30)
 
 ```
 
-Now we have configured the receiver, and it's time to setup the sampling.
+We have configured the receiver, and it's time to set up the sampling.
 
 ```jldoctest Receiver; output = false
 sample_format = BladeRF.BLADERF_FORMAT_SC16_Q11
@@ -98,18 +98,17 @@ println("length(normalized_samples) = ", length(normalized_samples))
 length(normalized_samples) = 4096
 ```
 
-We have now sucsessully sampled with the radio. To verify the samples, lets plot its Power Spectral Density (PSD).
+We have now successfully sampled with the radio. To verify the samples, let's plot its Power Spectral Density (PSD).
 
 ```jldoctest Receiver; output = false
 pgram = periodogram(normalized_samples, onesided=false, fs=actual_rate_Hz)
 
 plot(pgram.freq, pow2db.(pgram.power), title="Power Spectral Density", xlabel="Frequency", ylabel="Power [dB/Hz]")
 
-file_name = "Receiver_PSD.svg"
-savefig(file_name); nothing
+savefig("src/plots/Receiver_PSD.svg"); nothing
 
 # output
 
 ```
 
-![PSD of the samples](https://github.com/ErikBuer/BladeRF.jl/blob/master/plots/Receiver_PSD.svg)
+![PSD of the samples](./../plots/Receiver_PSD.svg)
