@@ -105,10 +105,10 @@ pgram = periodogram(normalized_samples, onesided=false, fs=actual_rate_Hz)
 
 plot(pgram.freq, pow2db.(pgram.power), title="Power Spectral Density", xlabel="Frequency", ylabel="Power [dB/Hz]")
 
-savefig("../plots/Receiver_PSD.svg"); nothing
+savefig("src/plots/Receiver_PSD.svg"); nothing
 
 # output
 
 ```
 
-![PSD of the samples](plots/Receiver_PSD.svg)
+![PSD of the samples](./../plots/Receiver_PSD.svg)
