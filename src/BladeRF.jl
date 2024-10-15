@@ -4,10 +4,10 @@ using CEnum
 using Printf
 using Libdl
 
-export find_libbladeRF, install_bladeRF, BladeRFError, ReturnCode, check_error,
+export install_bladeRF, BladeRFError, ReturnCode,
        bladerf_version, Version, version, DevInfo, bladerf_devinfo, get_devinfo,
        BladeRFRange, BladerfGainMode, BladerfGainModes, BladeRFLoopback, BladeRFLoopbackModes,
-       BladerfFormat, BladerfMetadata, init_metadata, BladeRFDevice, close, get_serial,
+       BladerfFormat, BladerfMetadata, init_metadata, BladeRFDevice, get_serial,
        set_frequency, get_frequency, get_frequency_range, set_sample_rate, get_sample_rate,
        get_sample_rate_range, set_gain, get_gain, get_gain_range, set_gain_mode, get_gain_mode,
        get_gain_modes, set_bandwidth, get_bandwidth, get_bandwidth_range, set_loopback,
@@ -15,7 +15,11 @@ export find_libbladeRF, install_bladeRF, BladeRFError, ReturnCode, check_error,
        submit_stream_buffer_nonblocking, sync_config, sync_tx, sync_rx, enable_module,
        CHANNEL_RX, CHANNEL_TX
 
-# Function to find the library in standard locations
+"""
+    find_libbladeRF()
+
+Function to find the library in standard locations
+"""
 function find_libbladeRF()
     possible_paths = [
         "/usr/local/lib/libbladeRF.so",
@@ -33,7 +37,12 @@ function find_libbladeRF()
     return nothing
 end
 
-# Function to install the BladeRF library
+
+"""
+    install_bladeRF()
+
+Function to install the BladeRF library
+"""
 function install_bladeRF()
     println("Installing the BladeRF C library...")
     # Path to the bash script
@@ -79,7 +88,11 @@ function Base.showerror(io::IO, e::BladeRFError)
     @printf(io, "BladeRF Error %d: %s", e.code, e.msg)
 end
 
-# Define ReturnCode enum
+""" 
+    ReturnCode
+
+Error codesß returned by the BladeRF C library.
+"""
 const ReturnCode = Dict(
     0 => "BladeRFError",
     -1 => "UnexpectedError",
@@ -476,28 +489,41 @@ function init_stream(dev::BladeRFDevice, callback::Function, num_buffers::UInt, 
     return (stream_ptr[], buffers)
 end
 
-
+"""
+"""
 function stream(stream_ptr::Ptr{Cvoid}, layout::BladerfChannelLayout)
     status = ccall((:bladerf_stream, libbladeRF), Cint, (Ptr{Cvoid}, BladerfChannelLayout), stream_ptr, layout)
     check_error(status)
 end
 
+"""
+    deinit_stream(stream_ptr::Ptr{Cvoid})
+"""
 function deinit_stream(stream_ptr::Ptr{Cvoid})
     ccall((:bladerf_deinit_stream, libbladeRF), Cvoid, (Ptr{Cvoid},), stream_ptr)
 end
 
+"""
+    submit_stream_buffer(stream_ptr::Ptr{Cvoid}, buffer::Ptr{Cvoid}, timeout_ms::UInt)
+"""
 function submit_stream_buffer(stream_ptr::Ptr{Cvoid}, buffer::Ptr{Cvoid}, timeout_ms::UInt)
     status = ccall((:bladerf_submit_stream_buffer, libbladeRF), Cint,
         (Ptr{Cvoid}, Ptr{Cvoid}, UInt, Bool), stream_ptr, buffer, timeout_ms, false)
     check_error(status)
 end
 
+"""
+    submit_stream_buffer_nonblocking(stream_ptr::Ptr{Cvoid}, buffer::Ptr{Cvoid})
+"""
 function submit_stream_buffer_nonblocking(stream_ptr::Ptr{Cvoid}, buffer::Ptr{Cvoid})
     status = ccall((:bladerf_submit_stream_buffer_nb, libbladeRF), Cint,
         (Ptr{Cvoid}, Ptr{Cvoid}), stream_ptr, buffer)
     check_error(status)
 end
 
+"""
+    sync_config(dev::BladeRFDevice, layout::BladerfChannelLayout, format::BladerfFormat, num_buffers::UInt, buffer_size::UInt, num_transfers::UInt, stream_timeout::UInt)
+"""
 function sync_config(dev::BladeRFDevice, layout::BladerfChannelLayout, format::BladerfFormat, num_buffers::UInt, buffer_size::UInt, num_transfers::UInt, stream_timeout::UInt)
     status = ccall((:bladerf_sync_config, libbladeRF), Cint,
         (Ptr{Cvoid}, BladerfChannelLayout, BladerfFormat, UInt, UInt, UInt, UInt),
@@ -505,18 +531,27 @@ function sync_config(dev::BladeRFDevice, layout::BladerfChannelLayout, format::B
     check_error(status)
 end
 
+"""
+    sync_tx(dev::BladeRFDevice, samples::Ptr{Cvoid}, num_samples::UInt, metadata::Ptr{BladerfMetadata}, timeout_ms::UInt)
+"""
 function sync_tx(dev::BladeRFDevice, samples::Ptr{Cvoid}, num_samples::UInt, metadata::Ptr{BladerfMetadata}, timeout_ms::UInt)
     status = ccall((:bladerf_sync_tx, libbladeRF), Cint,
         (Ptr{Cvoid}, Ptr{Cvoid}, UInt, Ptr{BladerfMetadata}, UInt), dev.dev, samples, Cuint(num_samples), metadata, timeout_ms)
     check_error(status)
 end
 
+"""
+    sync_rx(dev::BladeRFDevice, samples::Ptr{Cvoid}, num_samples::UInt, metadata::Ptr{BladerfMetadata}, timeout_ms::UInt)
+"""
 function sync_rx(dev::BladeRFDevice, samples::Ptr{Cvoid}, num_samples::UInt, metadata::Ptr{BladerfMetadata}, timeout_ms::UInt)
     status = ccall((:bladerf_sync_rx, libbladeRF), Cint,
         (Ptr{Cvoid}, Ptr{Cvoid}, UInt, Ptr{BladerfMetadata}, UInt), dev.dev, samples, Cuint(num_samples), metadata, timeout_ms)
     check_error(status)
 end
 
+"""
+    enable_module(device::BladeRFDevice, channel::Integer, enable::Bool)
+"""
 function enable_module(device::BladeRFDevice, channel::Integer, enable::Bool)
     ret = ccall((:bladerf_enable_module, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Bool), device.dev, channel, enable)
     check_error(ret)
