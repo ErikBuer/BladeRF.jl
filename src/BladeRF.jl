@@ -5,7 +5,7 @@ using Printf
 using Libdl
 
 export install_bladeRF, BladeRFError, ReturnCode,
-       bladerf_version, Version, version, DevInfo, bladerf_devinfo, get_devinfo,
+       bladerf_version, Version, DevInfo, get_devinfo,
        BladeRFRange, BladerfGainMode, BladerfGainModes, BladeRFLoopback, BladeRFLoopbackModes,
        BladerfFormat, BladerfMetadata, init_metadata, BladeRFDevice, get_serial,
        set_frequency, get_frequency, get_frequency_range, set_sample_rate, get_sample_rate,
@@ -88,11 +88,6 @@ function Base.showerror(io::IO, e::BladeRFError)
     @printf(io, "BladeRF Error %d: %s", e.code, e.msg)
 end
 
-""" 
-    ReturnCode
-
-Error codesß returned by the BladeRF C library.
-"""
 const ReturnCode = Dict(
     0 => "BladeRFError",
     -1 => "UnexpectedError",
@@ -116,7 +111,11 @@ const ReturnCode = Dict(
     -19 => "NotInitError"
 )
 
-# Utility function to check errors
+"""
+    check_error(code::Cint)
+
+Utility function to check errors
+"""
 function check_error(code::Cint)
     if code < 0
         error_name = get(ReturnCode, code, "UnknownError")
@@ -141,6 +140,9 @@ struct Version
     describe::String
 end
 
+"""
+    bladerf_version()::Version
+"""
 function version()
     version_ptr = Ref{bladerf_version}()
     ccall((:bladerf_version, libbladeRF), Cvoid, (Ptr{bladerf_version},), version_ptr)
@@ -276,6 +278,9 @@ struct BladeRFDevice
     devinfo::DevInfo
 end
 
+"""
+    BladeRFDevice(device_identifier::String="")
+"""
 function BladeRFDevice(device_identifier::String="")
     dev = Ref{Ptr{Cvoid}}()
     result = ccall((:bladerf_open, libbladeRF), Cint, (Ptr{Ptr{Cvoid}}, Cstring), dev, device_identifier)
@@ -290,10 +295,16 @@ function BladeRFDevice(device_identifier::String="")
     BladeRFDevice(dev[], devinfo)
 end
 
+"""
+    close(dev::BladeRFDevice)
+"""
 function close(dev::BladeRFDevice)
     ccall((:bladerf_close, libbladeRF), Cvoid, (Ptr{Cvoid},), dev.dev)
 end
 
+"""
+    get_serial(dev::BladeRFDevice)
+"""
 function get_serial(dev::BladeRFDevice)
     serial = Vector{UInt8}(undef, 33)
     check_error(ccall((:bladerf_get_serial, libbladeRF), Cint, (Ptr{Cvoid}, Ptr{UInt8}), dev.dev, serial))
@@ -304,18 +315,25 @@ end
 # Frequency
 #******************************************************************************
 
-# Get set frequency
+"""
+    set_frequency(dev::BladeRFDevice, channel::Integer, frequency::Int64)
+"""
 function set_frequency(dev::BladeRFDevice, channel::Integer, frequency::Int64)
     check_error(ccall((:bladerf_set_frequency, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Int64), dev.dev, Int32(channel), frequency))
 end
 
+"""
+    get_frequency(dev::BladeRFDevice, channel::Integer)
+"""
 function get_frequency(dev::BladeRFDevice, channel::Integer)
     frequency = Ref{Int64}()
     check_error(ccall((:bladerf_get_frequency, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Ptr{Int64}), dev.dev, Int32(channel), frequency))
     frequency[]
 end
 
-# Get frequency range
+"""
+    get_frequency_range(dev::BladeRFDevice, channel::Integer)
+"""
 function get_frequency_range(dev::BladeRFDevice, channel::Integer)
     range_ptr = Ref{Ptr{BladeRFRange}}()  # Pointer to pointer to BladeRFRange
     result = ccall((:bladerf_get_frequency_range, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Ref{Ptr{BladeRFRange}}), dev.dev, Int32(channel), range_ptr)
@@ -329,7 +347,9 @@ end
 # Sample Rate
 #******************************************************************************
 
-# Get and set sample rate
+"""
+    set_sample_rate(dev::BladeRFDevice, channel::Integer, rate::Integer)
+"""
 function set_sample_rate(dev::BladeRFDevice, channel::Integer, rate::Integer)
     actual = Ref{Cuint}()
     check_error(ccall((:bladerf_set_sample_rate, libbladeRF), Cint,
@@ -338,6 +358,9 @@ function set_sample_rate(dev::BladeRFDevice, channel::Integer, rate::Integer)
     Int(actual[])
 end
 
+"""
+    get_sample_rate(dev::BladeRFDevice, channel::Integer)
+"""
 function get_sample_rate(dev::BladeRFDevice, channel::Integer)
     rate = Ref{Cuint}()
     check_error(ccall((:bladerf_get_sample_rate, libbladeRF), Cint,
@@ -346,6 +369,9 @@ function get_sample_rate(dev::BladeRFDevice, channel::Integer)
     Int(rate[])
 end
 
+"""
+    get_sample_rate_range(dev::BladeRFDevice, channel::Integer)
+"""
 function get_sample_rate_range(dev::BladeRFDevice, channel::Integer)
     range_ptr = Ref{Ptr{BladeRFRange}}()  # Pointer to pointer to BladeRFRange
     result = ccall((:bladerf_get_sample_rate_range, libbladeRF), Cint,
@@ -361,17 +387,25 @@ end
 # Gain
 #******************************************************************************
 
-# Get and set gain
+"""
+    set_gain(dev::BladeRFDevice, channel::Integer, gain::Integer)
+"""
 function set_gain(dev::BladeRFDevice, channel::Integer, gain::Integer)
     check_error(ccall((:bladerf_set_gain, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Cint), dev.dev, Int32(channel), Int32(gain)))
 end
 
+"""
+    get_gain(dev::BladeRFDevice, channel::Integer)
+"""
 function get_gain(dev::BladeRFDevice, channel::Integer)
     gain = Ref{Cint}()
     check_error(ccall((:bladerf_get_gain, libbladeRF), Cint, (Ptr{Cvoid}, Cint, Ptr{Cint}), dev.dev, Int32(channel), gain))
     gain[]
 end
 
+"""
+    get_gain_range(dev::BladeRFDevice, channel::Integer)
+"""
 function get_gain_range(dev::BladeRFDevice, channel::Integer)
     range_ptr = Ref{Ptr{BladeRFRange}}()  # Pointer to pointer to BladeRFRange
     result = ccall((:bladerf_get_gain_range, libbladeRF), Cint,
@@ -383,12 +417,18 @@ function get_gain_range(dev::BladeRFDevice, channel::Integer)
     return (range.min, range.max, range.step, range.scale)
 end
 
+"""
+    set_gain_mode(dev::BladeRFDevice, channel::Integer, mode::BladerfGainMode)
+"""
 function set_gain_mode(dev::BladeRFDevice, channel::Integer, mode::BladerfGainMode)
     check_error(ccall((:bladerf_set_gain_mode, libbladeRF), Cint,
         (Ptr{Cvoid}, Cint, Cint),
         dev.dev, Int32(channel), mode))
 end
 
+"""
+    get_gain_mode(dev::BladeRFDevice, channel::Integer)
+"""
 function get_gain_mode(dev::BladeRFDevice, channel::Integer)
     mode = Ref{Cint}()
     check_error(ccall((:bladerf_get_gain_mode, libbladeRF), Cint,
@@ -397,7 +437,9 @@ function get_gain_mode(dev::BladeRFDevice, channel::Integer)
     BladerfGainMode(mode[])
 end
 
-
+"""
+    get_gain_modes(dev::BladeRFDevice, channel::Integer)
+"""
 function get_gain_modes(dev::BladeRFDevice, channel::Integer)
     modes_ptr = Ref{Ptr{BladerfGainModes}}()
     num_modes = ccall((:bladerf_get_gain_modes, libbladeRF), Cint,
@@ -417,6 +459,9 @@ end
 # Bandwidth
 #******************************************************************************
 
+"""
+    set_bandwidth(dev::BladeRFDevice, channel::Integer, bandwidth::Integer)
+"""
 function set_bandwidth(dev::BladeRFDevice, channel::Integer, bandwidth::Integer)
     actual = Ref{Cuint}()  # This will store the actual bandwidth set by the device
     check_error(ccall((:bladerf_set_bandwidth, libbladeRF), Cint,
@@ -425,6 +470,9 @@ function set_bandwidth(dev::BladeRFDevice, channel::Integer, bandwidth::Integer)
     actual[]  # Return the actual bandwidth set
 end
 
+"""
+    get_bandwidth(dev::BladeRFDevice, channel::Integer)
+"""
 function get_bandwidth(dev::BladeRFDevice, channel::Integer)
     bandwidth = Ref{Cuint}()
     check_error(ccall((:bladerf_get_bandwidth, libbladeRF), Cint,
@@ -433,6 +481,9 @@ function get_bandwidth(dev::BladeRFDevice, channel::Integer)
     bandwidth[]  # Return the current bandwidth setting
 end
 
+"""
+    get_bandwidth_range(dev::BladeRFDevice, channel::Integer)
+"""
 function get_bandwidth_range(dev::BladeRFDevice, channel::Integer)
     range_ptr = Ref{Ptr{BladeRFRange}}()  # Pointer to pointer to BladeRFRange
     result = ccall((:bladerf_get_bandwidth_range, libbladeRF), Cint,
@@ -448,12 +499,18 @@ end
 # Loopback
 #******************************************************************************
 
+"""
+    set_loopback(dev::BladeRFDevice, lb::BladeRFLoopback)
+"""
 function set_loopback(dev::BladeRFDevice, lb::BladeRFLoopback)
     check_error(ccall((:bladerf_set_loopback, libbladeRF), Cint,
         (Ptr{Cvoid}, Cint),
         dev.dev, lb))
 end
 
+"""
+    get_loopback(dev::BladeRFDevice)
+"""
 function get_loopback(dev::BladeRFDevice)
     lb = Ref{Cint}()
     check_error(ccall((:bladerf_get_loopback, libbladeRF), Cint,
@@ -462,6 +519,9 @@ function get_loopback(dev::BladeRFDevice)
     BladeRFLoopback(lb[])
 end
 
+"""
+    get_loopback_modes(dev::BladeRFDevice)
+"""
 function get_loopback_modes(dev::BladeRFDevice)
     modes_ptr = Ref{Ptr{BladeRFLoopbackModes}}()
     num_modes = ccall((:bladerf_get_loopback_modes, libbladeRF), Cint,
@@ -477,6 +537,9 @@ end
 # Streaming
 #******************************************************************************
 
+"""
+    init_stream(dev::BladeRFDevice, callback::Function, num_buffers::UInt, format::BladerfFormat, samples_per_buffer::UInt, num_transfers::UInt)
+"""
 function init_stream(dev::BladeRFDevice, callback::Function, num_buffers::UInt, format::BladerfFormat, samples_per_buffer::UInt, num_transfers::UInt)
     buffers = Vector{Ptr{Cvoid}}(undef, num_buffers)
     stream_ptr = Ref{Ptr{Cvoid}}()
@@ -490,6 +553,7 @@ function init_stream(dev::BladeRFDevice, callback::Function, num_buffers::UInt, 
 end
 
 """
+    stream(stream_ptr::Ptr{Cvoid}, layout::BladerfChannelLayout)
 """
 function stream(stream_ptr::Ptr{Cvoid}, layout::BladerfChannelLayout)
     status = ccall((:bladerf_stream, libbladeRF), Cint, (Ptr{Cvoid}, BladerfChannelLayout), stream_ptr, layout)
