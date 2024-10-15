@@ -16,6 +16,7 @@ Support to the bladeRF Julia is also found in the [AbstractSDRs.jl](https://gith
 ## Testing the code
 
 The tests must be run with a BladeRF connected.
+**TEST WITH DISCONNECTED RF PORTS!**
 
 From project root, run the following bash command.
 
