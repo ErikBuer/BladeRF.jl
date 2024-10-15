@@ -1,9 +1,19 @@
 module BladeRF
 
 using CEnum
-
 using Printf
 using Libdl
+
+export find_libbladeRF, install_bladeRF, BladeRFError, ReturnCode, check_error,
+       bladerf_version, Version, version, DevInfo, bladerf_devinfo, get_devinfo,
+       BladeRFRange, BladerfGainMode, BladerfGainModes, BladeRFLoopback, BladeRFLoopbackModes,
+       BladerfFormat, BladerfMetadata, init_metadata, BladeRFDevice, close, get_serial,
+       set_frequency, get_frequency, get_frequency_range, set_sample_rate, get_sample_rate,
+       get_sample_rate_range, set_gain, get_gain, get_gain_range, set_gain_mode, get_gain_mode,
+       get_gain_modes, set_bandwidth, get_bandwidth, get_bandwidth_range, set_loopback,
+       get_loopback, get_loopback_modes, init_stream, stream, deinit_stream, submit_stream_buffer,
+       submit_stream_buffer_nonblocking, sync_config, sync_tx, sync_rx, enable_module,
+       CHANNEL_RX, CHANNEL_TX
 
 # Function to find the library in standard locations
 function find_libbladeRF()

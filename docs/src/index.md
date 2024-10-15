@@ -1,15 +1,9 @@
 # BladeRF.jl Documentation
 
 
-```@autodocs
-Modules = [BladeRF]
-Private = true
-Order = [:function]
-```
-
+This is an unofficial wrapper for libbladeRF.
+For the latest information, see the [official BladeRF documentation](https://www.nuand.com/libbladeRF-doc/).
 
 ```@autodocs
 Modules = [BladeRF]
-Private = true
-Order = [:type]
 ```
