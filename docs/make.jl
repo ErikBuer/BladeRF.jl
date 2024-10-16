@@ -30,6 +30,7 @@ makedocs(
         "index.md",
         "Examples"  => Any[ 
                         "Examples/receiver.md",
+                        "Examples/transmitter.md",
                     ],
     ],
     doctest  = run_doc_tests, # As the doctests require hardware they cant be run on the CI.

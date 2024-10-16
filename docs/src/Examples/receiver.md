@@ -27,7 +27,8 @@ actual_bandwidth = BladeRF.set_bandwidth(radioBoard, 0, desired_bandwidth_Hz)
 BladeRF.enable_module(radioBoard, 0, true)
 
 # Set sample rate
-actual_rate_Hz = BladeRF.set_sample_rate(radioBoard, 0, 1000000)
+sample_rate_Hz = 1000000
+actual_rate_Hz = BladeRF.set_sample_rate(radioBoard, 0, sample_rate_Hz)
 
 # Set gain mode
 BladeRF.set_gain_mode(radioBoard, 0, BladeRF.BLADERF_GAIN_MGC)
@@ -57,14 +58,14 @@ buf = Vector{UInt8}(undef, buffer_size)
 metadata = BladeRF.init_metadata()
 timeout_ms = UInt(1000)  # Timeout in milliseconds
 
-channel = BladeRF.BladerfChannelLayout(0)
+channel_layout = BladeRF.BladerfChannelLayout(0)
 
 num_buffers = UInt(32)
 blade_buffer_size = UInt(8192)
 num_transfers = UInt(16)
 stream_timeout = UInt(1000)
 
-BladeRF.sync_config(radioBoard, channel, sample_format, num_buffers, blade_buffer_size, num_transfers, stream_timeout)
+BladeRF.sync_config(radioBoard, channel_layout, sample_format, num_buffers, blade_buffer_size, num_transfers, stream_timeout)
 
 
 BladeRF.enable_module(radioBoard, 0, true)
