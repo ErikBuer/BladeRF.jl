@@ -20,8 +20,8 @@ BladeRF.set_frequency(radioBoard, 0, desired_freq_Hz);
 freq = BladeRF.get_frequency(radioBoard, 0);
 
 # Setting bandwidth
-desired_bandwidth = 5000000  # Desired bandwidth in Hz
-actual_bandwidth = BladeRF.set_bandwidth(radioBoard, 0, desired_bandwidth)
+desired_bandwidth_Hz = 500000  # Desired bandwidth in Hz
+actual_bandwidth = BladeRF.set_bandwidth(radioBoard, 0, desired_bandwidth_Hz)
 
 # Enable module
 BladeRF.enable_module(radioBoard, 0, true)
@@ -33,7 +33,7 @@ actual_rate_Hz = BladeRF.set_sample_rate(radioBoard, 0, 1000000)
 BladeRF.set_gain_mode(radioBoard, 0, BladeRF.BLADERF_GAIN_MGC)
 
 # Set gain
-BladeRF.set_gain(radioBoard, 0, 30)
+BladeRF.set_gain(radioBoard, 0, 0)
 
 # output
 
@@ -112,3 +112,18 @@ savefig("src/plots/Receiver_PSD.svg"); nothing
 ```
 
 ![PSD of the samples](./../plots/Receiver_PSD.svg)
+
+
+The code above has been run with a connected signal generator, supplying a -50 dBm CW tone.
+The below Power spectrum shows the received tone, with unwanted mirror and spurs.
+
+![PSD of samples with a -50 dBm CW tone](./../plots/Receiver_PSD_with_-50_dBm_tone.svg)
+
+To demonstrate the continuity between buffer read cycles (iterations of the for loop), we plot the time-domain signal at the point where two buffer sizes overlap. This allows us to observe the transition between buffers and verify that the signal remains continuous across them.
+
+```julia
+plot(real(normalized_samples[800:1200]))
+savefig("src/plots/Receiver_time_domain_-50dBm-tone.svg"); nothing
+```
+
+![PSD of the samples](./../plots/Receiver_time_domain_-50dBm-tone.svg)
