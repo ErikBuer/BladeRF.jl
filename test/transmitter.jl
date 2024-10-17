@@ -1,12 +1,4 @@
-# Transmitter
-
-This example configures the BladeRF as a transmitter and transmit on TX1.
-There is a lot of setup, as this is a low-level API.
-
-The bladeRF has a wideband DAC, so lets create ann interresting waveform to transmit.
-
-```jldoctest Transmitter; output = false
-using ..BladeRF
+using BladeRF
 using DSP
 using Plots
 ENV["GKSwstype"]="100" # run Plots headless
@@ -51,16 +43,30 @@ for i in 1:num_hops
     hop_signal[segment_start:segment_end] .= exp.(1im * 2 * pi * freq .* t_segment)
 end
 
-nothing
+# Plot the real part of the hopping signal
+plot(t, real(hop_signal), label="Frequency Hopping Signal", xlabel="Time (s)", ylabel="Amplitude")
 
-# output
-
-```
+#savefig("src/plots/waveform_to_transmit.svg"); nothing
 
 
-As the DAC uses discrete voltage levels, we must convert our normalized waveform to the correct integer type.
 
-```jldoctest Transmitter; output = false
+
+
+#_______________________________________________________________________________
+
+
+
+
+pgram = periodogram(hop_signal, onesided=false, fs=sample_rate_Hz)
+
+plot(pgram.freq, pow2db.(pgram.power), title="Power Spectral Density", xlabel="Frequency", ylabel="Power [dB/Hz]")
+
+#savefig("src/plots/waveform_to_transmit_PSD.svg"); nothing
+
+
+#_______________________________________________________________________________
+
+
 max_12_bit_range = 2048-1  # Maximum range for 12-bit ADC
 scaled_signal = hop_signal .* max_12_bit_range
 
@@ -71,17 +77,12 @@ imag_scaled_clipped = clamp.(imag(scaled_signal), -2048, 2047)
 
 global discrete_signal
 discrete_signal = Complex{Int16}.(round.(real_scaled_clipped), round.(imag_scaled_clipped))
-nothing
-
-# output
+println("length(discrete_signal) = ", length(discrete_signal))
 
 
-```
+#_______________________________________________________________________________
 
 
-Now that we have our desired waveform, lets configure the transmitter.
-
-```jldoctest Transmitter; output = false
 # Initialize the device
 radioBoard = BladeRF.BladeRFDevice();
 
@@ -102,15 +103,9 @@ actual_rate_Hz = BladeRF.set_sample_rate(radioBoard, tx_chanel_1, sample_rate_Hz
 
 # Set gain
 BladeRF.set_gain(radioBoard, tx_chanel_1, 40)
-nothing
 
-# output
 
-```
-
-We have configured the transmitter, and it's time to set up the start the generation.
-
-```jldoctest Transmitter; output = false
+#_______________________________________________________________________________
 
 sample_format = BladeRF.BLADERF_FORMAT_SC16_Q11
 
@@ -166,7 +161,7 @@ GC.@preserve write_buf metadata begin
     metadata_ref = Ref(metadata)
     metadata_ptr = Base.unsafe_convert(Ptr{BladeRF.BladerfMetadata}, metadata_ref)
 
-    # Transmit samples in chunks of write_buf_size_bytes
+    # Transmit samples in chunks of buffer_size
     index = 1
     for i in 1:read_cycles
         copy_end = min(index + write_buf_size_bytes - 1, length(transmit_bytes))  # Prevent buffer overflow
@@ -191,18 +186,3 @@ BladeRF.enable_module(radioBoard, tx_chanel_1, false)
 
 # Close the device
 BladeRF.close(radioBoard)
-
-# output
-
-
-```
-
-The generated output is captured with a Signal Hound BB60C spectrum analyzer.
-The waterfall shows the RF power over time and frequency.
-
-Notice the transmitted tones in the beginning, before the frequency hopping transmission.
-These unwanted tones are generated while the BladeRF is being configured.
-
-In the waterfall, we also notice the mirror images of the tones. These are unwanted tones resulting from analog effects such as IQ imbalance.
-
-![Power spectrum of the generated samples](./../plots/frequency-hop-waterfall.png)
