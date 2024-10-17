@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Transmitter · BladeRF.jl</title><meta name="title" content="Transmitter · BladeRF.jl"/><meta property="og:title" content="Transmitter · BladeRF.jl"/><meta property="twitter:title" content="Transmitter · BladeRF.jl"/><meta name="description" content="Documentation for BladeRF.jl."/><meta property="og:description" content="Documentation for BladeRF.jl."/><meta property="twitter:description" content="Documentation for BladeRF.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">BladeRF.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">BladeRF.jl Documentation</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../receiver/">Receiver</a></li><li class="is-active"><a class="tocitem" href>Transmitter</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Transmitter</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Transmitter</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/ErikBuer/BladeRF.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/ErikBuer/BladeRF.jl/blob/master/docs/src/Examples/transmitter.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Transmitter"><a class="docs-heading-anchor" href="#Transmitter">Transmitter</a><a id="Transmitter-1"></a><a class="docs-heading-anchor-permalink" href="#Transmitter" title="Permalink"></a></h1><p>This example configures the BladeRF as a transmitter and transmit on TX1. There is a lot of setup, as this is a low-level API.</p><p>The bladeRF has a wideband DAC, so lets create ann interresting waveform to transmit.</p><pre><code class="language-julia hljs">using ..BladeRF
+using DSP
+using Plots
+ENV[&quot;GKSwstype&quot;]=&quot;100&quot; # run Plots headless
+
+# Parameters
+sample_rate_Hz = Int(1e6)  # Sample rate
+num_samples = Int(10e6)           # Number of samples for the signal
+T = num_samples / sample_rate_Hz  # Total time duration of the sweep
+
+# Define frequency range for random selection
+f_min = -sample_rate_Hz/2 # Minimum frequency
+f_max = sample_rate_Hz/2  # Maximum frequency
+
+# Number of hops (user-defined)
+num_hops = 48
+
+# Calculate samples per segment based on the number of hops
+samples_per_segment = div(num_samples, num_hops)
+remaining_samples = num_samples % num_hops  # In case of leftover samples
+
+# Generate random frequencies for each hop within the specified range
+frequencies = rand(f_min:f_max, num_hops)  # Randomly select frequencies in range [-5 MHz, 5 MHz]
+
+# Generate time vector
+t = range(0, stop=T, length=num_samples)
+
+# Initialize the signal
+hop_signal = zeros(Complex{Float64}, num_samples)
+
+# Generate the frequency hopping signal
+for i in 1:num_hops
+    segment_start = (i - 1) * samples_per_segment + 1
+    if i == num_hops
+        segment_end = i * samples_per_segment + remaining_samples  # Include remaining samples in the last segment
+    else
+        segment_end = i * samples_per_segment
+    end
+    t_segment = t[segment_start:segment_end]
+    freq = frequencies[i]
+    
+    # Generate constant frequency signal for this segment
+    hop_signal[segment_start:segment_end] .= exp.(1im * 2 * pi * freq .* t_segment)
+end
+
+nothing</code></pre><p>As the DAC uses discrete voltage levels, we must convert our normalized waveform to the correct integer type.</p><pre><code class="language-julia hljs">max_12_bit_range = 2048-1  # Maximum range for 12-bit ADC
+scaled_signal = hop_signal .* max_12_bit_range
+
+# Convert the signal to Complex{Int16}
+# Clip any possible overflows to the valid range
+real_scaled_clipped = clamp.(real(scaled_signal), -2048, 2047)
+imag_scaled_clipped = clamp.(imag(scaled_signal), -2048, 2047)
+
+global discrete_signal
+discrete_signal = Complex{Int16}.(round.(real_scaled_clipped), round.(imag_scaled_clipped))
+nothing</code></pre><p>Now that we have our desired waveform, lets configure the transmitter.</p><pre><code class="language-julia hljs"># Initialize the device
+radioBoard = BladeRF.BladeRFDevice();
+
+tx_chanel_1 = 1
+
+desired_freq_Hz = round(Int64, 2.4e9);
+BladeRF.set_frequency(radioBoard, tx_chanel_1, desired_freq_Hz);
+
+# Setting bandwidth
+desired_bandwidth_Hz = ceil(UInt, 0.8*sample_rate_Hz)  # Desired bandwidth in Hz
+actual_bandwidth = BladeRF.set_bandwidth(radioBoard, tx_chanel_1, desired_bandwidth_Hz)
+
+# Enable module
+#BladeRF.enable_module(radioBoard, tx_chanel_1, true)
+
+# Set sample rate
+actual_rate_Hz = BladeRF.set_sample_rate(radioBoard, tx_chanel_1, sample_rate_Hz)
+
+# Set gain
+BladeRF.set_gain(radioBoard, tx_chanel_1, 40)
+nothing</code></pre><p>We have configured the transmitter, and it&#39;s time to set up the start the generation.</p><pre><code class="language-julia hljs">
+sample_format = BladeRF.BLADERF_FORMAT_SC16_Q11
+
+# Transmission parameters
+bytes_per_sample = 4  # Each sample is 2 bytes for I and 2 bytes for Q, hence 4 bytes per complex sample
+buffer_size_samples = 4096  # Number of complex samples per buffer
+read_cycles = ceil(Int, length(discrete_signal) / buffer_size_samples)
+total_bytes = Int(read_cycles * buffer_size_samples * bytes_per_sample)
+
+
+# Calculate total samples required for exact number of buffers
+total_samples_required = read_cycles * buffer_size_samples
+
+# Calculate how many samples need to be appended
+padding_samples = total_samples_required - length(discrete_signal)
+
+# Append zeroes to discrete_signal (as Complex{Int16} zeros)
+if padding_samples &gt; 0
+    zero_padding = Complex{Int16}[0 + 0im for _ in 1:padding_samples]  # Create zero complex samples
+    discrete_signal = vcat(discrete_signal, zero_padding)  # Append the zeros to the signal
+end
+
+# Convert complex samples to UInt8 for transmission
+transmit_bytes = reinterpret(UInt8, discrete_signal)
+
+# Metadata and buffer setup
+write_buf_size_bytes = buffer_size_samples * bytes_per_sample
+write_buf = Vector{UInt8}(undef, write_buf_size_bytes)
+metadata = BladeRF.init_metadata()
+
+timeout_ms = UInt(3500)
+
+channel_layout = BladeRF.BladerfChannelLayout(tx_chanel_1)
+
+# Configure BladeRF for transmission
+BladeRF.sync_config(
+    radioBoard,
+    channel_layout,
+    sample_format,
+    UInt(16), # num_buffers
+    UInt(buffer_size_samples), # buffer_size
+    UInt(8), # num_transfers
+    timeout_ms
+)
+
+# Enable transmission on the BladeRF device
+BladeRF.enable_module(radioBoard, tx_chanel_1, true)
+
+
+# Transmit the data in cycles
+GC.@preserve write_buf metadata begin
+    buffer_ptr = Base.unsafe_convert(Ptr{Nothing}, pointer(write_buf))
+    metadata_ref = Ref(metadata)
+    metadata_ptr = Base.unsafe_convert(Ptr{BladeRF.BladerfMetadata}, metadata_ref)
+
+    # Transmit samples in chunks of write_buf_size_bytes
+    index = 1
+    for i in 1:read_cycles
+        copy_end = min(index + write_buf_size_bytes - 1, length(transmit_bytes))  # Prevent buffer overflow
+        copyto!(write_buf, 1, transmit_bytes, index, copy_end - index + 1)  # Fill buffer with the correct segment
+        
+        # Transmit the buffer
+        BladeRF.sync_tx(
+            radioBoard, 
+            buffer_ptr, 
+            UInt(buffer_size_samples), 
+            metadata_ptr, 
+            timeout_ms
+        )
+
+        # Move the index forward by the size of the transmitted buffer
+        global index += copy_end - index + 1
+    end
+end
+
+
+BladeRF.enable_module(radioBoard, tx_chanel_1, false)
+
+# Close the device
+BladeRF.close(radioBoard)</code></pre><p>The generated output is captured with a Signal Hound BB60C spectrum analyzer. The waterfall shows the RF power over time and frequency.</p><p>Notice the transmitted tones in the beginning, before the frequency hopping transmission. These unwanted tones are generated while the BladeRF is being configured.</p><p>In the waterfall, we also notice the mirror images of the tones. These are unwanted tones resulting from analog effects such as IQ imbalance.</p><p><img src="../../plots/frequency-hop-waterfall.png" alt="Power spectrum of the generated samples"/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../receiver/">« Receiver</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Thursday 17 October 2024 20:26">Thursday 17 October 2024</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
