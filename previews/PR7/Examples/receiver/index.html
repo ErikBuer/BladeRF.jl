@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Receiver · BladeRF.jl</title><meta name="title" content="Receiver · BladeRF.jl"/><meta property="og:title" content="Receiver · BladeRF.jl"/><meta property="twitter:title" content="Receiver · BladeRF.jl"/><meta name="description" content="Documentation for BladeRF.jl."/><meta property="og:description" content="Documentation for BladeRF.jl."/><meta property="twitter:description" content="Documentation for BladeRF.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">BladeRF.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">BladeRF.jl Documentation</a></li><li><span class="tocitem">Examples</span><ul><li class="is-active"><a class="tocitem" href>Receiver</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Receiver</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Receiver</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/ErikBuer/BladeRF.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/ErikBuer/BladeRF.jl/blob/master/docs/src/Examples/receiver.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Receiver"><a class="docs-heading-anchor" href="#Receiver">Receiver</a><a id="Receiver-1"></a><a class="docs-heading-anchor-permalink" href="#Receiver" title="Permalink"></a></h1><p>This example configures the BladeRF as a receiver and captures samples on channel 0. There is a lot of setup, as this is a low-level API.</p><pre><code class="language-julia hljs">using ..BladeRF
+using DSP
+using Plots
+ENV[&quot;GKSwstype&quot;]=&quot;100&quot; # run Plots headless
+
+# Initialize the device
+radioBoard = BladeRF.BladeRFDevice();
+
+
+desired_freq_Hz = round(Int64, 2.4e9);
+BladeRF.set_frequency(radioBoard, 0, desired_freq_Hz);
+
+# Get frequency to verify
+freq = BladeRF.get_frequency(radioBoard, 0);
+
+# Setting bandwidth
+desired_bandwidth = 5000000  # Desired bandwidth in Hz
+actual_bandwidth = BladeRF.set_bandwidth(radioBoard, 0, desired_bandwidth)
+
+# Enable module
+BladeRF.enable_module(radioBoard, 0, true)
+
+# Set sample rate
+actual_rate_Hz = BladeRF.set_sample_rate(radioBoard, 0, 1000000)
+
+# Set gain mode
+BladeRF.set_gain_mode(radioBoard, 0, BladeRF.BLADERF_GAIN_MGC)
+
+# Set gain
+BladeRF.set_gain(radioBoard, 0, 30)</code></pre><p>We have configured the receiver, and it&#39;s time to set up the sampling.</p><pre><code class="language-julia hljs">sample_format = BladeRF.BLADERF_FORMAT_SC16_Q11
+
+num_samples = 4096
+
+bytes_per_sample = 4
+buffer_size_samples = 1024
+buffer_size = ceil(Int, buffer_size_samples * bytes_per_sample)
+read_cycles = ceil(Int, num_samples / (buffer_size / bytes_per_sample))
+total_bytes = Int(read_cycles * buffer_size)
+
+received_bytes = Vector{UInt8}(undef, total_bytes)
+buf = Vector{UInt8}(undef, buffer_size)
+metadata = BladeRF.init_metadata()
+timeout_ms = UInt(1000)  # Timeout in milliseconds
+
+channel = BladeRF.BladerfChannelLayout(0)
+
+num_buffers = UInt(32)
+blade_buffer_size = UInt(8192)
+num_transfers = UInt(16)
+stream_timeout = UInt(1000)
+
+BladeRF.sync_config(radioBoard, channel, sample_format, num_buffers, blade_buffer_size, num_transfers, stream_timeout)
+
+
+BladeRF.enable_module(radioBoard, 0, true)
+
+GC.@preserve buf metadata begin
+    buffer_ptr = Base.unsafe_convert(Ptr{Nothing}, pointer(buf))
+    metadata_ref = Ref(metadata)
+    metadata_ptr = Base.unsafe_convert(Ptr{BladeRF.BladerfMetadata}, metadata_ref)
+
+    # Receive samples
+    index = 1
+    for i in 1:read_cycles
+        BladeRF.sync_rx(radioBoard, buffer_ptr, UInt(buffer_size_samples), metadata_ptr, timeout_ms)
+        unsafe_copyto!(received_bytes, index, buf, 1, buffer_size)
+        global index += buffer_size
+    end
+end
+
+BladeRF.enable_module(radioBoard, 0, false)
+
+# Close the device
+BladeRF.close(radioBoard)
+
+
+complex_samples = reinterpret(Complex{Int16}, received_bytes)
+normalized_samples = Complex{Float32}.(complex_samples) ./ 2048.0;
+println(&quot;length(normalized_samples) = &quot;, length(normalized_samples))</code></pre><p>We have now successfully sampled with the radio. To verify the samples, let&#39;s plot its Power Spectral Density (PSD).</p><pre><code class="language-julia hljs">pgram = periodogram(normalized_samples, onesided=false, fs=actual_rate_Hz)
+
+plot(pgram.freq, pow2db.(pgram.power), title=&quot;Power Spectral Density&quot;, xlabel=&quot;Frequency&quot;, ylabel=&quot;Power [dB/Hz]&quot;)
+
+savefig(&quot;src/plots/Receiver_PSD.svg&quot;); nothing</code></pre><p><img src="../../plots/Receiver_PSD.svg" alt="PSD of the samples"/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« BladeRF.jl Documentation</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Tuesday 15 October 2024 19:08">Tuesday 15 October 2024</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
