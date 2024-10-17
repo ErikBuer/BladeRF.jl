@@ -1,7 +1,7 @@
 name = "BladeRF"
 uuid = "84778de4-bd0a-4e54-84e6-5620fea7ea81"
 authors = ["Erik Buer <buer94@gmail.com>"]
-version = "0.0.5"
+version = "0.0.6"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
