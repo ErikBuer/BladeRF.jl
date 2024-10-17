@@ -148,7 +148,7 @@ println("")
 
 
 plot(pgram.freq, pow2db.(pgram.power), title="Power Spectral Density", xlabel="Frequency", ylabel="Power [dB/Hz]")
-savefig("plots/periodogram.png")
+#savefig("plots/periodogram.png")
 
 #________________________________________________________________________________________________
 
